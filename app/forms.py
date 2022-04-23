@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 class RegisterForm(FlaskForm):
-  name = StringField('Username', validators=[InputRequired()])
+  name = StringField('name', validators=[InputRequired()])
   username = StringField('Username', validators=[InputRequired()])
   email = EmailField('Email Address', validators=[DataRequired()])
   biography = TextAreaField('Biography', validators=[DataRequired()])

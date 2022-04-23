@@ -84,25 +84,47 @@ def logout():
 def getCars():
    if request.method == "GET":
        cars = Cars.query.all()
-       return cars
+       if cars != 0:
+           for c in cars:
+                return jsonify(cars)
+       elif cars == 0:
+           return jsonify({"message": "could not get car"}), 401
 
 @app.route('/api/cars', methods=['POST']) ## Used for adding new cars
 @login_required
 def addCars():
     form = CarForm()
-    if request.method == "POST":
-        newcar = Cars(form.data)
+    if request.method == "POST" and form.validate_on_submit():
+        description = form.description.data
+        make  = form.make.data
+        model = form.model.data
+        colour = form.colour.data
+        year = form.year.data
+        transmission = form.transmission.data
+        car_type = form.car_type.data
+        price = form.price.data
+        photo = form.photo.data
+        filename = secure_filename(photo.filename)
+        photo.save(os.path.join(app.config['Cars_FOLDER'], filename))
+        
+        newcar = Cars(description = description, make = make ,model = model, colour = colour, year = year, transmission = transmission, car_type = car_type, price = price, photo = photo  )
         db.session.add(newcar)
         db.session.commit()
         flash('New car added!')
+        return redirect(url_for("home"))
+    
+    return jsonify({"errors": form_errors(form)}), 401
 
 
 @app.route('/api/cars/{car_id}', methods=['GET']) ## Get Details of a specific car
 @login_required
 def getCarbyId(car_id):
-    #if request.method == "GET":
-    car = Cars.query.filter_by(Cars.id==car_id).first()
-    return car
+    if request.method == "GET":
+        car = Cars.query.filter_by(Cars.id==car_id).first()
+        if car != 0:
+            for i in car:
+                return jsonify(car)
+    return jsonify({"message": "no car with id found"}), 401
 
 
 @app.route('/api/cars/{car_id}/favourite', methods=['POST']) ## Add car to Favourites for logged in user
@@ -115,7 +137,9 @@ def addfaveCar(car_id):
         db.session.add(favecar)
         db.session.commit()
         return jsonify({"message": "Car Successfully Favourited"}), 200
-    #return jsonify({"message": "Car was already favourited"}), 401
+    else:
+        return jsonify({"message": "Car was already favourited"}), 401
+
 
 
 @app.route('/api/search', methods=['GET']) ## Search for cars by make or model
@@ -126,8 +150,8 @@ def searchCar():
     if form.validate_on_submit():
         make = form.make.data
         model = form.model.data
-        if make in Cars.make or model in Cars.model:
-            result = Cars.query.filter_by(Cars.make==make, Cars.model==make).first()
+        if make in Cars.make or model in Cars.model:   
+            result = Cars.query.filter_by(Cars.make==make, Cars.model==model).first()
             return result
         return jsonify({"message": "Car Not found"}), 404
 
@@ -137,7 +161,11 @@ def searchCar():
 def getUserbyId(user_id):
     if request.method == "GET":
         user = Users.query.filter_by(Users.user_id==user_id).first()
-        return user
+        if user != 0:
+            for u in user:
+               return jsonify(user)
+        elif user == 0:
+            return jsonify({"message": "User was not found"}), 401
 
 
 @app.route('/api/users/{user_id}/favourites', methods=['GET']) ## Get cars that a user has favourited
@@ -145,7 +173,12 @@ def getUserbyId(user_id):
 def getfaveCar(user_id):
     if request.method == "GET":
         fave = Favourites.query.filter_by(Favourites.user_id==user_id).first()
-        return fave
+        if fave != 0 :
+            for f in fave:
+               return jsonify(fave)
+        elif fave == 0:
+            return jsonify({"message": "Favourite not found"}), 401
+        
     
 
 
