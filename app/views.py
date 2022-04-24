@@ -180,7 +180,11 @@ def getfaveCar(user_id):
             return jsonify({"message": "Favourite not found"}), 401
         
     
+@app.route('/api/csrf-token', methods=['GET'])
+@login_required
+def get_csrf(): 
 
+    return jsonify({'csrf_token': generate_csrf()})
 
 # Here we define a function to collect form errors from Flask-WTF
 # which we can later use
